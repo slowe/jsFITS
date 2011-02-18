@@ -83,8 +83,7 @@ FITS.prototype.readFITSImage = function(oFile,iOffset) {
 	var iLength = oFile.getLength();
 	var i = 0;
 	this.image = new Array(this.header.NAXIS1*this.header.NAXIS2);
-	iOffset = iOffset + 80;
-	var bBigEnd = true;
+	var bBigEnd = true;	// FITS is defined as big endian
 
 	// BITPIX
 	// 8-bit (unsigned) integer bytes
@@ -99,7 +98,8 @@ FITS.prototype.readFITSImage = function(oFile,iOffset) {
 	if(this.header.BITPIX == 16){
 		i = iOffset;
 		while (i < iLength){
-			this.image[p++] = oFile.getShortAt(i,bBigEnd)*this.header.BSCALE + this.header.BZERO;
+			val = oFile.getSShortAt(i,bBigEnd);
+			this.image[p++] = val*this.header.BSCALE + this.header.BZERO;
 			i += 2;
 		}
 		return true;
@@ -192,15 +192,27 @@ FITS.prototype.scaleImage = function(type){
 	
 	for(i = 0; i < this.image.length ; i++){
 		mean += this.image[i];
+		if(typeof this.image[i] != "number") alert(this.image[i])
 		if(this.image[i] > max) max = this.image[i];
 		if(this.image[i] < min) min = this.image[i];
 	}
 
 	mean /= this.image.length;
-	range = (max-mean);
-	if(type=="linear") for(i = 0; i < this.image.length ; i++) image[i] = 255*((this.image[i]-mean)/range);
-	if(type=="sqrt") for(i = 0; i < this.image.length ; i++) image[i] = 255*Math.sqrt((this.image[i]-mean)/range);
-	if(type=="cuberoot") for(i = 0; i < this.image.length ; i++) image[i] = 255*Math.pow((this.image[i]-mean)/range,0.333);
+
+	// Display fudge factors
+	upper = max - (max-min)*0.05;
+	lower = mean - (mean-min)*0.005;
+	range = (upper-lower);
+
+	//range = (max-threshold);
+	for(i = 0; i < this.image.length ; i++){
+		if(type=="linear") val = 255*((this.image[i]-lower)/range);
+		if(type=="sqrt") val = 255*Math.sqrt((this.image[i]-lower)/range);
+		if(type=="cuberoot") val = 255*Math.pow((this.image[i]-lower)/range,0.333);
+		if(val < 0) val = 0;
+		if(val > 255) val = 255;
+		image[i] = val;
+	}
 	return image;
 }
 function trim(s) {
