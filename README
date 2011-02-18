@@ -1,7 +1,7 @@
 jsFITS
 ======
 
-FITS(http://fits.gsfc.nasa.gov/fits_primer.html) is the Flexible Image Transport System and is widely used in astronomy for holding observation data. This is an attempt to build a FITS library for Javascript to allow FITS files to be displayed in a modern web browser. Given that FITS files have no compression they are quite large so I imagine this library will be more useful when run locally. By displaying the image using <canvas> in the browser, it will be very easy to save a FITS image as a standard graphics file.
+FITS (http://fits.gsfc.nasa.gov/fits_primer.html) is the Flexible Image Transport System and is widely used in astronomy for holding observation data. There are many FITS I/O libraries available in a variety of languages (http://fits.gsfc.nasa.gov/fits_libraries.html). This is an attempt to build a FITS library for Javascript to allow FITS files to be displayed in a modern web browser. Given that FITS files have no compression they are quite large so I imagine this library will be more useful when run locally. By displaying the image using <canvas> in the browser, it will be very easy to save a FITS image as a standard graphics file.
 
 Dependencies
 ------------
