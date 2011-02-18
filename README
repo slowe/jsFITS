@@ -1,0 +1,13 @@
+jsFITS
+======
+
+FITS(http://fits.gsfc.nasa.gov/fits_primer.html) is the Flexible Image Transport System and is widely used in astronomy for holding observation data. This is an attempt to build a FITS library for Javascript to allow FITS files to be displayed in a modern web browser. Given that FITS files have no compression they are quite large so I imagine this library will be more useful when run locally. By displaying the image using <canvas> in the browser, it will be very easy to save a FITS image as a standard graphics file.
+
+Dependencies
+------------
+
+For this library to work it has a few dependencies:
+
+* binaryajax.js(http://www.nihilogic.dk/labs/binaryajax/binaryajax.js) -- this does the XMLHttpRequest and the bit extraction. It is created by Jacob Seidelin and is only about 6.2 kB.
+* excanvas.js(http://code.google.com/p/explorercanvas/) -- this is used to allow canvas support on Internet Explorer.
+* jquery.js(http://jquery.com/) -- not used a great deal and I'll try to remove the need for it.
