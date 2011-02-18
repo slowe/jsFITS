@@ -17,3 +17,7 @@ FITS files
 Some example FITS files (from the Las Cumbres Observatory Global Telescope Network - http://lcogt.net/) can be found at:
 * M51 http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits (taken with Faulkes Telescope North operated by LCOGT)
 * M108 http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits (taken with Faulkes Telescope North operated by LCOGT)
+
+Author
+------
+Stuart Lowe works for the Las Cumbres Observatory Global Telescope (http://lcogt.net/). LCOGT is a private operating foundation, building a global network of telescopes for professional research and citizen investigations.
