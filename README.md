@@ -17,6 +17,34 @@ Limitations
 -----------
 Due to web browser cross-domain security issues, any FITS file you want to read must be hosted on the same domain as the code.
 
+
+Usage
+-----
+You need to include the appropriate Javascript files:
+
+	<script src="jquery-1.4.2.js"></script>
+	<script src="binaryajax.js"></script>
+	<script src="fits.js"></script>
+	<script src="excanvas.js"></script>
+
+Following those you can define your FITS object:
+
+	var fits = new FITS("l_e_20110215_205_1_1_1.fits");
+
+Now you need to load the FITS file and provide a function that will be called once loaded:
+
+	fits.load(loaded);
+
+	function loaded(obj){
+		// The FITS header keywords are stored in obj.header
+		// e.g. NAXIS = obj.header.NAXIS
+		//      OBSID = obj.header.OBSID
+		//      BITPIX = obj.header.BITPIX
+
+		obj.drawImage('FITSimage',"cuberoot");
+	}
+
+
 FITS files
 ----------
 Some example FITS files (from the [Las Cumbres Observatory Global Telescope Network](http://lcogt.net/)) can be found at:
