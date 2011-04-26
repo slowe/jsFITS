@@ -14,6 +14,7 @@ function FITS(input){
 	this.avmdata = false;
 	this.tags = {};
 	this.stretch = "linear";
+	this.onload = "";
 }
 
 // Change the source file (you'll need to do a .load() afterwards)
@@ -30,6 +31,7 @@ FITS.prototype.load = function(fnCallback){
 				var i = _obj.readFITSHeader(oHTTP.binaryResponse);
 				if(_obj.header.NAXIS == 2) success = _obj.readFITSImage(oHTTP.binaryResponse,i);
 				if (typeof fnCallback=="function") fnCallback(_obj);
+				else if(typeof _obj.onload=="function") _obj.onload.call(_obj);
 			}
 		)
 	}

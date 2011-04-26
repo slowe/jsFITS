@@ -1,31 +1,38 @@
+<script src="binaryajax.js"></script>
 <html>
 <head>
 	<title>FITS with Javascript</title>
 	<script src="jquery-1.4.2.js"></script>
 	<script src="binaryajax.js"></script>
 	<script src="fits.js"></script>
-	<script src="http://lcogt.net/en/user/slowe/dev/virtualsky/excanvas.js"></script>
+	<script src="excanvas.js"></script>
 	<script type="text/javascript">
 	<!--
 
 		var i = 0
 		var fits = new FITS("l_e_20110215_205_1_1_1.fits");
-		fits.load(loaded);
-
-		function loaded(obj){
+		fits.stretch = "cuberoot";
+		fits.onload = function(){
 			var str = '';
 			var i = 0;
-			str = 'NAXIS='+obj.header.NAXIS+'<br />OBSID='+obj.header.OBSID+'<br />i='+i+'<br />BITPIX='+obj.header.BITPIX+'<br />BSCALE='+obj.header.BSCALE+'<br />BZERO='+obj.header.BZERO+' ';
+			str = 'NAXIS='+this.header.NAXIS+'<br />OBSID='+this.header.OBSID+'<br />i='+i+'<br />BITPIX='+this.header.BITPIX+'<br />BSCALE='+this.header.BSCALE+'<br />BZERO='+this.header.BZERO+' ';
 			if(str.length == 0) str = "No FITS header found.";
 			$('#header').html(str);
 			
-			obj.drawImage('FITSimage',"cuberoot")
+			this.drawImage('FITSimage')
 		}
+		fits.load();
+
 		function update(el){
 			property = (el) ? el.name : "";
 			value = (el) ? el.value : "";
-			fits = new FITS(value);
+			fits.changeSource(value);
 			fits.load(loaded)
+		}
+		function changeScale(el){
+			property = (el) ? el.name : "";
+			value = (el) ? el.value : "";
+			fits.updateImage(value)
 		}
 	// --></script>
 
@@ -49,6 +56,17 @@
 		<option selected>l_e_20110215_205_1_1_1.fits</option>
 		<option>l_e_20110215_203_1_1_1.fits</option>
 		<option>l_e_20090603_64_18_1_1.fits</option>
+		<option>a_e_20110413_148_1_1_9.fits</option>
+		<option>a_e_20110413_149_1_1_9.fits</option>
+		<option>a_e_20110413_150_1_1_9.fits</option>
+	</select> or <input type="file" name="localfile" onSubmit="return false" onChange="update(this)">
+	<br />Stretch function: <select name="scale" onChange="changeScale(this)">
+		<option>linear</option>
+		<option>sqrt</option>
+		<option selected>cuberoot</option>
+		<option>log</option>
+		<option>sqrtlog</option>
+		<option>loglog</option>
 	</select>
 	<div id="header"></div>
 	<div id="FITSimage"></div>
