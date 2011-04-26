@@ -22,6 +22,9 @@ FITS.prototype.changeSource = function(input){
 	this.src = (input) ? input : this.src;
 }
 
+// Loads the FITS file using an ajax request. To call your own function after
+// the FITS file is loaded, you should either provide a callback directly or have
+// already set the onload function.
 FITS.prototype.load = function(fnCallback){
 	if(this.src){
 		var _obj = this;
@@ -44,8 +47,8 @@ if(typeof addEvent!="function"){
 	}
 }
 
+// Parse the ASCII header from the FITS file. It should be at the start.
 FITS.prototype.readFITSHeader = function(oFile) {
-
 	var iLength = oFile.getLength();
 	var iOffset = 0;
 	var header = {};
@@ -67,27 +70,29 @@ FITS.prototype.readFITSHeader = function(oFile) {
 				if(val.indexOf('.') >= 0) val = parseFloat(val); // Floating point
 				else val = parseInt(val); // Integer
 			}
+			// Construct an object to hold all the key/value pairs
 			header[key] = val;
 		}
+		// Check if we have reached the end of the header
 		if(str.indexOf('END') == 0) inHeader = 0;
-		//alert('='+key+'='+val+'=\n'+str)
-		//console.log(header)
 	}
 
+	// Set the header
 	this.header = header;
 	if(this.header.NAXIS==2){
+		// Set some handy variables for images
 		if(typeof this.header.NAXIS1=="number") this.width = this.header.NAXIS1;
 		if(typeof this.header.NAXIS2=="number") this.height = this.header.NAXIS2;
 	}
+
 	// Remove any space padding
 	while(iOffset < iLength && oFile.getStringAt(iOffset,1) == " ") iOffset++; 
 
 	return iOffset;
-	
 }
 
+// Parse the FITS image from the file
 FITS.prototype.readFITSImage = function(oFile,iOffset) {
-
 	var iLength = oFile.getLength();
 	var i = 0;
 	this.image = new Array(this.header.NAXIS1*this.header.NAXIS2);
@@ -114,6 +119,7 @@ FITS.prototype.readFITSImage = function(oFile,iOffset) {
 	}else return false;
 }
 
+// Use <canvas> to draw a 2D image
 FITS.prototype.drawImage = function(id,type){
 	this.id = id;
 	type = type || this.stretch;
@@ -159,12 +165,15 @@ FITS.prototype.drawImage = function(id,type){
 	imageData = this.ctx.createImageData(this.width, this.height);
 
 	var pos = 0;
+	
+	// Now actually build the image
 	this.updateImage(type);
 }
 
+// Calculate the pixel values using a defined stretch type and draw onto the canvas
 FITS.prototype.updateImage = function(type){
 	this.stretch = type ? type : this.stretch;
-		var max = 0;
+	var max = 0;
 	var min = 640000;
 	var mean = 0;
 	var median = 0;
@@ -192,7 +201,6 @@ FITS.prototype.updateImage = function(type){
 	for(j = Math.round(this.header.NAXIS2*0.45); j < Math.round(this.header.NAXIS2*0.55) ; j++) for(i = Math.round(this.header.NAXIS1*0.85); i < Math.round(this.header.NAXIS1*0.95) ; i++) sorted[count++] = this.image[j*this.header.NAXIS1 + i];
 	sorted.sort(function sortNumber(a,b){ return a - b; })
 	median = sorted[Math.floor(sorted.length/2)];
-	
 
 	// Fudge factors
 	if(this.stretch=="log") {
@@ -242,14 +250,10 @@ FITS.prototype.updateImage = function(type){
 	this.ctx.putImageData(imageData, 0, 0);
 }
 
-FITS.prototype.scaleImage = function(type){
-	this.stretch = type ? type : this.stretch;
-
-	return image;
-}
+// Helpful function for removing spaces at the start/end of a string
 function trim(s) {
-	s = s.replace(/(^\s*)|(\s*$)/gi,"");
-	s = s.replace(/[ ]{2,}/gi," ");
+	s = s.replace(/(^\s*)|(\s*$)/gi,"");	// Remove spaces at the start/end of the string
+	s = s.replace(/[ ]{2,}/gi," ");	// Remove multiple spaces
 	s = s.replace(/\n /,"\n");
 	return s;
 }
