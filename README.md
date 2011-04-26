@@ -41,7 +41,11 @@ Now you need to load the FITS file and provide a function that will be called on
 		//      OBSID = obj.header.OBSID
 		//      BITPIX = obj.header.BITPIX
 
-		obj.drawImage('FITSimage',"cuberoot");
+		// Now we draw the image.
+		// The first argument is the id of the page element
+		// The second argument is the type of stretch to apply
+		// e.g. linear, sqrt, cuberoot, log, sqrtlog, loglog
+		obj.drawImage('FITSimage','cuberoot');
 	}
 
 
