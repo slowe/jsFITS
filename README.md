@@ -8,9 +8,10 @@ Dependencies
 
 For this library to work it has a few dependencies:
 
-* [binaryajax.js](http://www.nihilogic.dk/labs/binaryajax/binaryajax.js) -- this does the XMLHttpRequest and the bit extraction. It is created by Jacob Seidelin and is only about 6.2 kB.
-* [excanvas.js](http://code.google.com/p/explorercanvas/) -- this is used to allow canvas support on Internet Explorer.
+* [binaryajax.js](http://www.nihilogic.dk/labs/binaryajax/binaryajax.js) -- this does the XMLHttpRequest and the bit extraction. It is created by Jacob Seidelin and is only about 6.2 kB;
+* [excanvas.js](http://code.google.com/p/explorercanvas/) -- this is used to allow canvas support on Internet Explorer;
 * [jquery.js](http://jquery.com/) -- not used a great deal and I'll try to remove the need for it.
+
 
 Limitations
 -----------
@@ -19,8 +20,9 @@ Due to web browser cross-domain security issues, any FITS file you want to read 
 FITS files
 ----------
 Some example FITS files (from the [Las Cumbres Observatory Global Telescope Network](http://lcogt.net/)) can be found at:
-* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT)
-* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT)
+
+* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT),
+* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT).
 
 Author
 ------
