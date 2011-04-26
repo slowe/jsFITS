@@ -33,9 +33,7 @@ Following those you can define your FITS object:
 
 Now you need to load the FITS file and provide a function that will be called once loaded:
 
-	fits.load(loaded);
-
-	function loaded(obj){
+	fits.onload = function(){
 		// The FITS header keywords are stored in obj.header
 		// e.g. NAXIS = obj.header.NAXIS
 		//      OBSID = obj.header.OBSID
@@ -45,16 +43,19 @@ Now you need to load the FITS file and provide a function that will be called on
 		// The first argument is the id of the page element
 		// The second argument is the type of stretch to apply
 		// e.g. linear, sqrt, cuberoot, log, sqrtlog, loglog
-		obj.drawImage('FITSimage','cuberoot');
+		this.drawImage('FITSimage','cuberoot');
 	}
+	fits.load();
 
 
 FITS files
 ----------
 Some example FITS files (from the [Las Cumbres Observatory Global Telescope Network](http://lcogt.net/)) can be found at:
 
-* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT),
-* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with Faulkes Telescope North operated by LCOGT).
+* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by LCOGT),
+* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by LCOGT).
+* [NGC 2011](http://ari-archive.lcogt.net/data/webfiles/1304317257/m_e_20110128_39_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by LCOGT)
+* [NGC 2020](http://ari-archive.lcogt.net/data/webfiles/1304322592/m_e_20110128_43_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by LCOGT)
 
 Author
 ------
