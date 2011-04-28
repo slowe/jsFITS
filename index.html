@@ -1,15 +1,15 @@
 <html>
 <head>
 	<title>FITS with Javascript</title>
-	<script src="jquery-1.4.2.js"></script>
-	<script src="binaryajax.js"></script>
-	<script src="fits.js"></script>
-	<script src="excanvas.js"></script>
+	<script src="http://lcogt.net/user/slowe/dev/fits/jquery-1.4.2.js"></script>
+	<script src="http://lcogt.net/user/slowe/dev/fits/binaryajax.js"></script>
+	<script src="http://github.com/slowe/jsFITS/raw/master/fits.js"></script>
+	<script src="http://lcogt.net/user/slowe/dev/virtualsky/excanvas.js"></script>
 	<script type="text/javascript">
 	<!--
 
 		var i = 0
-		var fits = new FITS("l_e_20110215_205_1_1_1.fits");
+		var fits = new FITS("l_e_20090603_64_18_1_1.fits");
 		fits.stretch = "cuberoot";
 		fits.onload = function(){
 			var str = '';
@@ -52,12 +52,8 @@
 
 	<h1>FITS extraction with Javascript</h1>
 	<select name="FITS" onChange="update(this)">
-		<option selected>l_e_20110215_205_1_1_1.fits</option>
-		<option>l_e_20110215_203_1_1_1.fits</option>
-		<option>l_e_20090603_64_18_1_1.fits</option>
-		<option>a_e_20110413_148_1_1_9.fits</option>
-		<option>a_e_20110413_149_1_1_9.fits</option>
-		<option>a_e_20110413_150_1_1_9.fits</option>
+		<option selected>l_e_20090603_64_18_1_1.fits</option>
+		<option>WFPC2u5780205r_c0fx.fits</option>
 	</select> or <input type="file" name="localfile" onSubmit="return false" onChange="update(this)">
 	<br />Stretch function: <select name="scale" onChange="changeScale(this)">
 		<option>linear</option>
