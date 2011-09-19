@@ -9,7 +9,7 @@ Dependencies
 For this library to work it has two dependencies:
 
 * [binaryajax.js](http://www.nihilogic.dk/labs/binaryajax/binaryajax.js) -- this does the XMLHttpRequest and the bit extraction. It is created by Jacob Seidelin and is only about 6.2 kB;
-* [excanvas.js](http://code.google.com/p/explorercanvas/) -- this is used to allow canvas support on Internet Explorer;
+* [excanvas.js](http://code.google.com/p/explorercanvas/) -- this is used to allow canvas support on Internet Explorer (41.6 kB).
 
 
 Limitations
