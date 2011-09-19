@@ -18,6 +18,7 @@ function FITS(input){
 	this.depth = 0;
 	this.z = 0;
 	this.events = {load:"",click:"",mousemove:""};	// Let's define some events
+	this.data = {load:"",click:"",mousemove:""};	// Let's define some event data
 }
 
 // Loads the FITS file using an ajax request. To call your own function after
@@ -28,13 +29,13 @@ FITS.prototype.load = function(source,fnCallback){
 	if(typeof this.src=="string"){ 
 		this.image = null
 		var _obj = this;
+		if(typeof fnCallback=="function") _obj.bind("load",fnCallback)
 		BinaryAjax(
 			_obj.src,
 			function(oHTTP){
 				var i = _obj.readFITSHeader(oHTTP.binaryResponse);
 				if(_obj.header.NAXIS >= 2) success = _obj.readFITSImage(oHTTP.binaryResponse,i);
-				if(typeof fnCallback=="function") fnCallback(_obj);
-				else if(typeof _obj.events.load=="function") _obj.events.load.call(_obj);
+				_obj.triggerEvent("load")
 			}
 		)
 	}
@@ -137,6 +138,7 @@ FITS.prototype.readFITSImage = function(oFile,iOffset){
 
 // Use <canvas> to draw a 2D image
 FITS.prototype.draw = function(id,type){
+	id = id || this.id;
 	this.id = id;
 	type = type || this.stretch;
 
@@ -273,7 +275,7 @@ FITS.prototype.update = function(inp){
 		for (col=0;col<this.width;col++){
 			pos = ((this.height-row)*this.width+col)*4
 			c = this.colorImage(image[i],this.color);
-			if(i < 3) console.log(c,image[i])
+			//if(i < 3) console.log(c,image[i])
 			imageData.data[pos] = c.r;
 			imageData.data[pos+1] = c.g;
 			imageData.data[pos+2] = c.b;
@@ -309,22 +311,38 @@ FITS.prototype.getCursor = function(e){
 
 FITS.prototype.clickListener = function(e){
 	this.getCursor(e);
-	this.events.click.call(this,{x:this.cursor.x,y:this.cursor.y});
+	this.triggerEvent("click",{x:this.cursor.x,y:this.cursor.y})
 }
 
 FITS.prototype.moveListener = function(e){
 	this.getCursor(e);
-	this.events.mousemove.call(this,{x:this.cursor.x,y:this.cursor.y});
+	this.triggerEvent("mousemove",{x:this.cursor.x,y:this.cursor.y})
 }
 
-FITS.prototype.bind = function(ev,fn){
+
+FITS.prototype.bind = function(ev,data,fn){
+	if(!fn && typeof data == "function") fn = data;
+	if(typeof data!="object") data = {};
 	if(typeof ev!="string" || typeof fn!="function") return this;
-	if(ev == "load") this.events.load = fn;
-	else if(ev == "click") this.events.click = fn;
-	else if(ev == "mousemove") this.events.mousemove = fn;
+	if(this.events[ev]) this.events[ev].push(fn);
+	else this.events[ev] = [fn];
+	if(this.data[ev]) this.data[ev].push(data);
+	else this.data[ev] = [data];
 	return this;
 }
-
+// Trigger a defined event with arguments.
+FITS.prototype.triggerEvent = function(ev,args){
+	if(typeof ev != "string") return;
+	if(typeof args != "object") args = {};
+	//var _obj = this;
+	if(typeof this.events[ev]=="object"){
+		for(i = 0 ; i < this.events[ev].length ; i++){
+			tmpargs = args;
+			tmpargs.data = this.data[ev][i];
+			if(typeof this.events[ev][i] == "function") this.events[ev][i].call(this,tmpargs);
+		}
+	}
+}
 // Colour scales defined by SAOImage
 FITS.prototype.colorImage = function(v,type){
 	if(type=="blackbody" || type=="heat") return {r:((v<=127.5) ? v*2 : 255),g:((v>63.75) ? ((v<191.25) ? (v-63.75)*2 : 255) : 0),b:((v>127.5) ? (v-127.5)*2 : 0)};
