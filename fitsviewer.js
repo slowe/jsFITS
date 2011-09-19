@@ -66,10 +66,12 @@ function FitsViewer(input){
 		html += '<option'+(this.colors[i]== this.fits.color ? ' selected="selected"' : '')+'>'+this.colors[i]+'</option>';
 	}
 	html += '</select>';
-	html += '<br /><canvas id="'+this.canvas+'"></canvas><p>Try dragging and dropping a FITS file into the box above.</p>';
+	html += '<br /><canvas id="'+this.canvas+'"></canvas>';
 	html += '<ul id="list"></ul>';
 
 	$('#'+this.id+'').html(html);
+	
+	this.imageUnderlay('Try dragging and dropping a FITS file into this box');
 
 	// Bind events
  	$('#'+this.id+' select.file').bind('change',{me:this}, function(e){
@@ -113,7 +115,6 @@ function FitsViewer(input){
 
 			e.data.me.processFile(files[0].name)
 
-
 			document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 
 		});
@@ -137,10 +138,21 @@ function FitsViewer(input){
 
 
 FitsViewer.prototype.processFile = function(file){
-	var canvas = $('#'+this.canvas);
-	if($('#'+this.id+' .loader').length == 0) $('#'+this.id).append('<div class="loader">Loading '+file+'</div>');
-	else $('#'+this.id+' .loader').show()
-	$('#'+this.id+' .loader').css({width:canvas.outerWidth(),height:canvas.outerHeight(),left:canvas.offset().left,top:canvas.offset().top});
+	this.imageOverlay('Loading '+file);
 	this.fits.load(file);
 }
 
+FitsViewer.prototype.imageUnderlay = function(txt){
+	var canvas = $('#'+this.canvas);
+	if($('#'+this.id+' .loader').length == 0) $('#'+this.id).append('<div class="loader"><div class="loader_inner">'+txt+'</div></div>');
+	else $('#'+this.id+' .loader').html(txt).show();
+	$('#'+this.id+' .loader').css({width:canvas.outerWidth(),height:canvas.outerHeight(),left:canvas.offset().left,top:canvas.offset().top,'z-index':-1});
+
+}
+FitsViewer.prototype.imageOverlay = function(txt){
+	var canvas = $('#'+this.canvas);
+	if($('#'+this.id+' .loader').length == 0) $('#'+this.id).append('<div class="loader"><div class="loader_inner">'+txt+'</div></div>');
+	else $('#'+this.id+' .loader').html(txt).show();
+	$('#'+this.id+' .loader').css({width:canvas.outerWidth(),height:canvas.outerHeight(),left:canvas.offset().left,top:canvas.offset().top,'z-index':1});
+
+}
