@@ -21,41 +21,57 @@ Usage
 -----
 You need to include the appropriate Javascript files:
 
-	<script src="jquery-1.4.2.js"></script>
 	<script src="binaryajax.js"></script>
-	<script src="fits.js"></script>
 	<script src="excanvas.js"></script>
+	<script src="fits.js"></script>
 
 Following those you can define your FITS object:
 
-	var fits = new FITS("l_e_20110215_205_1_1_1.fits");
+	var fits = new FITS();
 
-Now you need to load the FITS file and provide a function that will be called once loaded:
+Next we define what happens on load:
 
-	fits.onload = function(){
-		// The FITS header keywords are stored in obj.header
-		// e.g. NAXIS = obj.header.NAXIS
-		//      OBSID = obj.header.OBSID
-		//      BITPIX = obj.header.BITPIX
+	fits.bind("load",function(){
 
-		// Now we draw the image.
-		// The first argument is the id of the page element
-		// The second argument is the type of stretch to apply
-		// e.g. linear, sqrt, cuberoot, log, sqrtlog, loglog
-		this.drawImage('FITSimage','cuberoot');
-	}
-	fits.load();
+		// Display some values
+		document.getElementById('bitpix').innerHTML = this.header.BITPIX;
+		document.getElementById('depth').innerHTML = this.depth;
+		document.getElementById('z').value = 0;
+
+		this.draw("FITSimage")	// Draw the image to the element with id=FITSimage
+	})
+
+
+We can also bind some other events (which are chainable) e.g.:
+
+	fits.bind("click",function(e){
+		e.y = this.height - e.y
+		var value =this.image[e.y*this.width+e.x];
+		document.getElementById('status').innerHTML ='click=('+ e.x+','+e.y+')='+value;
+	}).bind("mousemove",function(e){
+		e.y = this.height - e.y
+		var value =this.image[e.y*this.width+e.x];
+		document.getElementById('status').innerHTML ='move=('+ e.x+','+e.y+')='+value;
+	})
+	
+
+Finally, load the FITS file. We've already defined the load event above:
+
+	fits.load("WFPC2u5780205r_c0fx.fits");
 
 
 FITS files
 ----------
-Some example FITS files (from the [Las Cumbres Observatory Global Telescope Network](http://lcogt.net/)) can be found at:
+Some example FITS files can be found at:
 
-* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by LCOGT),
-* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by LCOGT).
+* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)),
+* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)).
 * [NGC 2011](http://ari-archive.lcogt.net/data/webfiles/1304317257/m_e_20110128_39_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by LCOGT)
 * [NGC 2020](http://ari-archive.lcogt.net/data/webfiles/1304322592/m_e_20110128_43_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by LCOGT)
+* [WFPC II 800 x 800 x 4 primary array data cube containing the 4 CCD images](http://fits.gsfc.nasa.gov/cgi-bin/browse?file=/samples/WFPC2u5780205r_c0fx.fits) (trimmed to 200 x 200 and taken from http://fits.gsfc.nasa.gov/fits_samples.html)
 
 Author
 ------
 Stuart Lowe works for the [Las Cumbres Observatory Global Telescope](http://lcogt.net/). LCOGT is a private operating foundation, building a global network of telescopes for professional research and citizen investigations.
+
+Some improvements have been suggested by anonymous contributors.
