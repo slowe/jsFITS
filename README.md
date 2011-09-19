@@ -62,7 +62,7 @@ Finally, load the FITS file. We've already defined the load event above:
 
 FITS files
 ----------
-Some example FITS files can be found at:
+The example makes use of several FITS files. You can get these at:
 
 * [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)),
 * [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)).
