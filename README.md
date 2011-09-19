@@ -64,10 +64,10 @@ FITS files
 ----------
 The example makes use of several FITS files. You can get these at:
 
-* [M51](http://ari-archive.lcogt.net/data/webfiles/1298221795/l_e_20110215_205_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)),
-* [M108](http://ari-archive.lcogt.net/data/webfiles/1298260631/l_e_20110215_203_1_1_1.fits) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)).
-* [NGC 2011](http://ari-archive.lcogt.net/data/webfiles/1304317257/m_e_20110128_39_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by [LCOGT](http://lcogt.net/))
-* [NGC 2020](http://ari-archive.lcogt.net/data/webfiles/1304322592/m_e_20110128_43_1_1_1.fits) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by [LCOGT](http://lcogt.net/))
+* [M51](http://lcogt.net/en/observations/ogg/2m0a/60395) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)),
+* [M108](http://lcogt.net/en/observations/ogg/2m0a/56609) (taken with [Faulkes Telescope North](http://lco3-beta/en/observations/ogg/2m0a) operated by [LCOGT](http://lcogt.net/)).
+* [NGC 2011](http://lcogt.net/en/observations/coj/2m0a/55993) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by [LCOGT](http://lcogt.net/))
+* [NGC 2020](http://lcogt.net/en/observations/coj/2m0a/55996) (taken with [Faulkes Telescope South](http://lcogt.net/en/observations/coj/2m0a) operated by [LCOGT](http://lcogt.net/))
 * [WFPC II 800 x 800 x 4 primary array data cube containing the 4 CCD images](http://fits.gsfc.nasa.gov/cgi-bin/browse?file=/samples/WFPC2u5780205r_c0fx.fits) (trimmed to 200 x 200 and taken from http://fits.gsfc.nasa.gov/fits_samples.html)
 
 Author
