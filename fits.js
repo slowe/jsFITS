@@ -345,6 +345,7 @@ FITS.prototype.update = function (inp) {
   str = "";
   // put pixel data on canvas
   this.ctx.putImageData(imageData, 0, 0);
+  console.log("updated");
 };
 
 FITS.prototype.getCursor = function (e) {
