@@ -1,49 +1,52 @@
 <html>
-<head>
-	<title>Javascript FITS Viewer</title>
-	<script src="binaryajax.js"></script>
-	<script src="excanvas.js"></script>
-	<script src="jquery-1.6.min.js"></script>
-	<script src="fits.js"></script>
-	<script src="fitsviewer.js"></script>
-	<script type="text/javascript">
+  <head>
+    <title>Javascript FITS Viewer</title>
+    <script src="binaryajax.js"></script>
+    <script src="excanvas.js"></script>
+    <script src="jquery-1.6.min.js"></script>
+    <script src="fits.js"></script>
+    <script src="fitsviewer.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        fv = new FitsViewer();
+      });
+    </script>
 
-	$(document).ready(function(){
-
-		fv = new FitsViewer();
-
-	});
-	</script>
-
-	<style>
-	body {
-		margin: 10px;
-		font-family: Arial, sans-serif;
-		background-color: white;
-		color: black;
-	}
-	a { color: #5555aa; }
-	canvas { border: 3px solid #000000; }
-	code { color: #5555aa; }
-	pre { color: #5555aa; }
-	.dragover {
-		border: 3px dashed #999999;
-	}
-	.loader {
-		background-color: rgba(100,100,100,0.4);
-		color:white;
-		position:absolute;
-		text-align: center;
-		margin: auto;
-	}
-	.loader_inner {
-		margin: 10px;
-	}
-	</style>
-</head>
-<body>
-
-	<div id="FITSViewer"></div>
-
-</body>
+    <style>
+      body {
+        margin: 10px;
+        font-family: Arial, sans-serif;
+        background-color: white;
+        color: black;
+      }
+      a {
+        color: #5555aa;
+      }
+      canvas {
+        border: 3px solid #000000;
+      }
+      code {
+        color: #5555aa;
+      }
+      pre {
+        color: #5555aa;
+      }
+      .dragover {
+        border: 3px dashed #999999;
+      }
+      .loader {
+        background-color: rgba(100, 100, 100, 0.4);
+        color: white;
+        position: absolute;
+        text-align: center;
+        margin: auto;
+      }
+      .loader_inner {
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="FITSViewer"></div>
+  </body>
 </html>

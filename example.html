@@ -1,81 +1,111 @@
 <html>
-<head>
-	<title>FITS with Javascript</title>
-	<script src="binaryajax.js"></script>
-	<script src="fits.js"></script>
-	<script src="excanvas.js"></script>
-	<script type="text/javascript">
-		// Define the FITS object
-		var fits = new FITS();
+  <head>
+    <title>FITS with Javascript</title>
+    <script src="binaryajax.js"></script>
+    <script src="fits.js"></script>
+    <script src="excanvas.js"></script>
+    <script type="text/javascript">
+      // Define the FITS object
+      var fits = new FITS();
 
-		// Define the stretch function to apply e.g. linear, sqrt, cuberoot, log, loglog, sqrtlog
-		fits.stretch = "log";
+      // Define the stretch function to apply e.g. linear, sqrt, cuberoot, log, loglog, sqrtlog
+      fits.stretch = "log";
 
-		// Bind some events
-		fits.bind("click",function(e){
-			e.y = this.height - e.y
-			var value =this.image[e.y*this.width+e.x];
-			document.getElementById('status').innerHTML ='click=('+ e.x+','+e.y+')='+value;
-		}).bind("mousemove",function(e){
-			e.y = this.height - e.y
-			var value =this.image[e.y*this.width+e.x];
-			document.getElementById('status').innerHTML ='move=('+ e.x+','+e.y+')='+value;
-		}).bind("load",function(){
-			document.getElementById('bitpix').innerHTML = this.header.BITPIX;
-			document.getElementById('depth').innerHTML = this.depth;
-			document.getElementById('z').value = 0;
-			this.draw("FITSimage")
-		})
+      // Bind some events
+      fits
+        .bind("click", function (e) {
+          e.y = this.height - e.y;
+          var value = this.image[e.y * this.width + e.x];
+          document.getElementById("status").innerHTML =
+            "click=(" + e.x + "," + e.y + ")=" + value;
+        })
+        .bind("mousemove", function (e) {
+          e.y = this.height - e.y;
+          var value = this.image[e.y * this.width + e.x];
+          document.getElementById("status").innerHTML =
+            "move=(" + e.x + "," + e.y + ")=" + value;
+        })
+        .bind("load", function () {
+          document.getElementById("bitpix").innerHTML = this.header.BITPIX;
+          document.getElementById("depth").innerHTML = this.depth;
+          document.getElementById("z").value = 0;
+          this.draw("FITSimage");
+        });
 
-		// Load an initial FITS file
-		fits.load("WFPC2u5780205r_c0fx.fits");
-	</script>
+      // Load an initial FITS file
+      fits.load("WFPC2u5780205r_c0fx.fits");
+    </script>
 
-	<style>
-	body {
-		margin: 10px;
-		font-family: Arial, sans-serif;
-		background-color: white;
-		color: black;
-	}
-	a { color: #5555aa; }
-	canvas { border: 1px solid #ff0000; }
-	code { color: #5555aa; }
-	pre { color: #5555aa; }
-	</style>
-</head>
-<body>
+    <style>
+      body {
+        margin: 10px;
+        font-family: Arial, sans-serif;
+        background-color: white;
+        color: black;
+      }
+      a {
+        color: #5555aa;
+      }
+      canvas {
+        border: 1px solid #ff0000;
+      }
+      code {
+        color: #5555aa;
+      }
+      pre {
+        color: #5555aa;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FITS extraction with Javascript</h1>
 
-	<h1>FITS extraction with Javascript</h1>
+    File:
+    <select name="FITS" onChange="fits.load(this.value)">
+      <option selected>WFPC2u5780205r_c0fx.fits</option>
+      <option>l_e_20110215_205_1_1_1.fits</option>
+      <option>l_e_20110215_203_1_1_1.fits</option></select
+    ><!-- or <input type="file" name="localfile" onSubmit="return false" onChange="fits.load(this.value)">-->
 
-	File: <select name="FITS" onChange="fits.load(this.value)">
-		<option selected>WFPC2u5780205r_c0fx.fits</option>
-		<option>l_e_20110215_205_1_1_1.fits</option>
-		<option>l_e_20110215_203_1_1_1.fits</option>
-	</select><!-- or <input type="file" name="localfile" onSubmit="return false" onChange="fits.load(this.value)">-->
+    Scaling function:
+    <select name="scale" onChange="fits.update(this.value)">
+      <option>linear</option>
+      <option>sqrt</option>
+      <option>cuberoot</option>
+      <option selected="selected">log</option>
+      <option>sqrtlog</option>
+      <option>loglog</option>
+    </select>
 
-	Scaling function: <select name="scale" onChange="fits.update(this.value)">
-		<option>linear</option>
-		<option>sqrt</option>
-		<option>cuberoot</option>
-		<option selected="selected">log</option>
-		<option>sqrtlog</option>
-		<option>loglog</option>
-	</select>
+    Color:
+    <select name="scale" onChange="fits.update({color:this.value})">
+      <option selected="selected">gray</option>
+      <option>heat</option>
+      <option>A</option>
+      <option>B</option>
+    </select>
 
-	Color: <select name="scale" onChange="fits.update({color:this.value})">
-		<option selected="selected">gray</option>
-		<option>heat</option>
-		<option>A</option>
-		<option>B</option>
-	</select>
-
-	Frame <button onClick="fits.update({index:--(document.getElementById('z').value)})">&lt;</button>
-	<input id="z" name="z" value="0" size=3 onChange="fits.update({index:this.value})">
-	<button onClick="fits.update({index:++(document.getElementById('z').value)})">&gt;</button> of <span id=depth></span>. Format: <span id=bitpix></span>.
-	<span id="status"></span>
-	<br>
-	<canvas id="FITSimage"></canvas>
-
-</body>
+    Frame
+    <button
+      onClick="fits.update({index:--(document.getElementById('z').value)})"
+    >
+      &lt;
+    </button>
+    <input
+      id="z"
+      name="z"
+      value="0"
+      size="3"
+      onChange="fits.update({index:this.value})"
+    />
+    <button
+      onClick="fits.update({index:++(document.getElementById('z').value)})"
+    >
+      &gt;
+    </button>
+    of <span id="depth"></span>. Format: <span id="bitpix"></span>.
+    <span id="status"></span>
+    <br />
+    <canvas id="FITSimage"></canvas>
+  </body>
 </html>
