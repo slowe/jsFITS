@@ -35,9 +35,11 @@ FITS.prototype.load = function (source, fnCallback) {
 
     oReq.onload = function (oEvent) {
       _obj.readFITSHeader(oReq.response).then((headerOffset) => {
-        if (_obj.header.NAXIS >= 2)
-          success = _obj.readFITSImage(oReq.response, headerOffset);
-        _obj.triggerEvent("load");
+        if (_obj.header.NAXIS >= 2) {
+          _obj.readFITSImage(oReq.response, headerOffset).then((success) => {
+            _obj.triggerEvent("load");
+          });
+        }
       });
     };
     oReq.send();
@@ -47,7 +49,6 @@ FITS.prototype.load = function (source, fnCallback) {
 
 // Parse the ASCII header from the FITS file. It should be at the start.
 FITS.prototype.readFITSHeader = function (blob) {
-  console.log(blob);
   var iLength = blob.size;
   var iOffset = 0;
   var header = {};
@@ -60,14 +61,15 @@ FITS.prototype.readFITSHeader = function (blob) {
       let str = asText.slice(iOffset, iOffset + 80);
       iOffset += 80;
       var eq = str.indexOf("=");
+      let commentOrLineEnd = str.includes("/") ? str.indexOf("/") : str.length;
       key = trim(str.substring(0, eq));
-      val = trim(str.substring(eq + 1, Math.max(str.indexOf("/"), str.length)));
+      val = trim(str.substring(eq + 1, commentOrLineEnd));
       if (key.length > 0) {
         if (val.indexOf("'") === 0) {
           // It is a string
           val = val.substring(1, val.length - 2);
         } else {
-          if (val.indexOf(".") >= 0) val = parseFloat(val);
+          if (val.includes(".")) val = parseFloat(val);
           // Floating point
           else val = parseInt(val); // Integer
         }
@@ -100,52 +102,29 @@ FITS.prototype.readFITSHeader = function (blob) {
 
 // Parse the FITS image from the file
 FITS.prototype.readFITSImage = function (blob, headerOffset) {
-  var iLength = blob.size;
-  var i = 0;
   this.z = 0;
-  this.image = new Array(this.width * this.height * this.depth);
-  var bBigEnd = typeof this.header.BYTEORDR == "undefined"; // FITS is defined as big endian
+  let bBigEnd = typeof this.header.BYTEORDR === "undefined"; // FITS is defined as big endian
 
-  // BITPIX
-  // 8-bit (unsigned) integer bytes
-  // 16-bit (signed) integers
-  // 32-bit (signed) integers
-  // 32-bit single precision floating point real numbers
-  // 64-bit double precision floating point real numbers
-  //
-  // Should actually deal with the different cases
-  var p = 0;
+  return blob
+    .slice(headerOffset)
+    .arrayBuffer()
+    .then((buf) => {
+      switch (this.header.BITPIX) {
+        case 16:
+          this.image = new Uint16Array(buf);
+          if (bBigEnd && !systemBigEndian()) {
+            this.image = this.image.map(swap16);
+          }
+          break;
+        case -32:
+          this.image = new Float32Array(buf);
+          break;
+        default:
+          return false;
+      }
 
-  if (this.header.BITPIX === 16) {
-    i = headerOffset;
-    while (i < iLength) {
-      val = getSShortAt(blob, i, bBigEnd);
-      this.image[p++] = val * this.header.BSCALE + this.header.BZERO;
-      i += 2;
-    }
-    return true;
-  } else if (this.header.BITPIX === -32) {
-    i = headerOffset;
-    var x;
-    while (i < iLength) {
-      x = val = getLongAt(blob, i, true); //IEEE float32 is always big-endian
-      if (val !== 0)
-        val =
-          (1.0 + (val & 0x007fffff) / 0x0800000) *
-          Math.pow(2, ((val & 0x7f800000) >> 23) - 127);
-      //  val = (((0x8000000|(val&0x007fffff))/0x0800000)) * Math.pow(2,(val&0x7f800000)>>23 - 127);
-      //val = (val&0x7f800000)>>23-127
-      //val = val&0x07fffff
-
-      //alert(x + ' ' + val.toSource())
-      //break
-      if (x < 0) val = -val;
-      this.image[p++] = val * this.header.BSCALE + this.header.BZERO;
-
-      i += 4;
-    }
-    return true;
-  } else return false;
+      return true;
+    });
 };
 
 // Use <canvas> to draw a 2D image
@@ -202,7 +181,6 @@ FITS.prototype.draw = function (id, type) {
 
   // create a new batch of pixels with the same
   // dimensions as the image:
-  console.log(this.width, this.height);
   imageData = this.ctx.createImageData(this.width, this.height);
 
   var pos = 0;
@@ -301,22 +279,22 @@ FITS.prototype.update = function (inp) {
   }
   range = upper - lower;
 
-  if (this.stretch == "linear")
+  if (this.stretch === "linear")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = 255 * ((this.image[i] - lower) / range);
-  if (this.stretch == "sqrt")
+  if (this.stretch === "sqrt")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = 255 * Math.sqrt((this.image[i] - lower) / range);
-  if (this.stretch == "cuberoot")
+  if (this.stretch === "cuberoot")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = 255 * Math.pow((this.image[i] - lower) / range, 0.333);
-  if (this.stretch == "log")
+  if (this.stretch === "log")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = (255 * (Math.log(this.image[i]) - lower)) / range;
-  if (this.stretch == "loglog")
+  if (this.stretch === "loglog")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = (255 * (Math.log(Math.log(this.image[i])) - lower)) / range;
-  if (this.stretch == "sqrtlog")
+  if (this.stretch === "sqrtlog")
     for (j = 0, i = start; i < stop; j++, i++)
       image[j] = (255 * (Math.sqrt(Math.log(this.image[i])) - lower)) / range;
   for (i = 0; i < image.length; i++) {
@@ -345,7 +323,6 @@ FITS.prototype.update = function (inp) {
   str = "";
   // put pixel data on canvas
   this.ctx.putImageData(imageData, 0, 0);
-  console.log("updated");
 };
 
 FITS.prototype.getCursor = function (e) {
@@ -474,29 +451,42 @@ function trim(s) {
   return s;
 }
 
-function getShortAt(blob, offset, bigEndian) {
-  var short = bigEndian
-    ? (blob.slice(offset, 1) << 8) + blob.slice(offset + 1, 1)
-    : (blob.slice(offset + 1, 1) << 8) + blob.slice(offset, 1);
-  if (short < 0) short += 65536;
-  return short;
+function systemBigEndian() {
+  var arrayBuffer = new ArrayBuffer(2);
+  var uint8Array = new Uint8Array(arrayBuffer);
+  var uint16array = new Uint16Array(arrayBuffer);
+  uint8Array[0] = 0xaa; // set first byte
+  uint8Array[1] = 0xbb; // set second byte
+  if (uint16array[0] === 0xbbaa) return false;
+  if (uint16array[0] === 0xaabb) return true;
+  else throw new Error("Something crazy just happened");
 }
 
-function getSShortAt(blob, offset, bigEndian) {
-  var ushort = this.getShortAt(blob, offset, bigEndian);
-  if (ushort > 32767) return ushort - 65536;
-  else return ushort;
+function swap16(val) {
+  return ((val & 0xff) << 8) | ((val >> 8) & 0xff);
 }
 
-function getLongAt(blob, offset, bigEndian) {
-  var byte1 = blob.slice(offset, 1),
-    byte2 = blob.slice(offset + 1, 1),
-    byte3 = blob.slice(offset + 2, 1),
-    byte4 = blob.slice(offset + 3, 1);
+function swapBytes(buf, bitpix) {
+  var bytes = new Uint8Array(buf);
+  var len = bytes.length;
+  var holder;
 
-  var long = bigEndian
-    ? (((((byte1 << 8) + byte2) << 8) + byte3) << 8) + byte4
-    : (((((byte4 << 8) + byte3) << 8) + byte2) << 8) + byte1;
-  if (long < 0) long += 4294967296;
-  return long;
+  if (bitpix === 16) {
+    // 16 bit
+    for (var i = 0; i < len; i += 2) {
+      holder = bytes[i];
+      bytes[i] = bytes[i + 1];
+      bytes[i + 1] = holder;
+    }
+  } else if (bitpix === 32) {
+    // 32 bit
+    for (var i = 0; i < len; i += 4) {
+      holder = bytes[i];
+      bytes[i] = bytes[i + 3];
+      bytes[i + 3] = holder;
+      holder = bytes[i + 1];
+      bytes[i + 1] = bytes[i + 2];
+      bytes[i + 2] = holder;
+    }
+  }
 }
