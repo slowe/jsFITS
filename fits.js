@@ -29,68 +29,78 @@ FITS.prototype.load = function (source, fnCallback) {
     this.image = null;
     var _obj = this;
     if (typeof fnCallback == "function") _obj.bind("load", fnCallback);
-    BinaryAjax(_obj.src, function (oHTTP) {
-      var i = _obj.readFITSHeader(oHTTP.binaryResponse);
-      if (_obj.header.NAXIS >= 2)
-        success = _obj.readFITSImage(oHTTP.binaryResponse, i);
-      _obj.triggerEvent("load");
-    });
+    oReq = new XMLHttpRequest();
+    oReq.open("GET", _obj.src, true);
+    oReq.responseType = "blob";
+
+    oReq.onload = function (oEvent) {
+      _obj.readFITSHeader(oReq.response).then((headerOffset) => {
+        if (_obj.header.NAXIS >= 2)
+          success = _obj.readFITSImage(oReq.response, headerOffset);
+        _obj.triggerEvent("load");
+      });
+    };
+    oReq.send();
   }
   return this;
 };
 
 // Parse the ASCII header from the FITS file. It should be at the start.
-FITS.prototype.readFITSHeader = function (oFile) {
-  var iLength = oFile.getLength();
+FITS.prototype.readFITSHeader = function (blob) {
+  console.log(blob);
+  var iLength = blob.size;
   var iOffset = 0;
   var header = {};
   var key;
   var val;
   var inHeader = 1;
 
-  while (iOffset < iLength && inHeader) {
-    str = oFile.getStringAt(iOffset, 80);
-    iOffset += 80;
-    var eq = str.indexOf("=");
-    key = trim(str.substring(0, eq));
-    val = trim(str.substring(eq + 1, Math.max(str.indexOf("/"), str.length)));
-    if (key.length > 0) {
-      if (val.indexOf("'") == 0) {
-        // It is a string
-        val = val.substring(1, val.length - 2);
-      } else {
-        if (val.indexOf(".") >= 0) val = parseFloat(val);
-        // Floating point
-        else val = parseInt(val); // Integer
+  return blob.text().then((asText) => {
+    while (iOffset < iLength && inHeader) {
+      let str = asText.slice(iOffset, iOffset + 80);
+      iOffset += 80;
+      var eq = str.indexOf("=");
+      key = trim(str.substring(0, eq));
+      val = trim(str.substring(eq + 1, Math.max(str.indexOf("/"), str.length)));
+      if (key.length > 0) {
+        if (val.indexOf("'") === 0) {
+          // It is a string
+          val = val.substring(1, val.length - 2);
+        } else {
+          if (val.indexOf(".") >= 0) val = parseFloat(val);
+          // Floating point
+          else val = parseInt(val); // Integer
+        }
+        header[key] = val;
       }
-      header[key] = val;
+      if (str.indexOf("END") === 0) inHeader = 0;
     }
-    if (str.indexOf("END") == 0) inHeader = 0;
-    //console.log(header)
-  }
 
-  this.header = header;
-  if (this.header.NAXIS >= 2) {
-    if (typeof this.header.NAXIS1 == "number") this.width = this.header.NAXIS1;
-    if (typeof this.header.NAXIS2 == "number") this.height = this.header.NAXIS2;
-  }
+    this.header = header;
+    if (this.header.NAXIS >= 2) {
+      if (typeof this.header.NAXIS1 == "number")
+        this.width = this.header.NAXIS1;
+      if (typeof this.header.NAXIS2 == "number")
+        this.height = this.header.NAXIS2;
+    }
 
-  if (this.header.NAXIS > 2 && typeof this.header.NAXIS3 == "number")
-    this.depth = this.header.NAXIS3;
-  else this.depth = 1;
+    if (this.header.NAXIS > 2 && typeof this.header.NAXIS3 == "number")
+      this.depth = this.header.NAXIS3;
+    else this.depth = 1;
 
-  if (typeof this.header.BSCALE == "undefined") this.header.BSCALE = 1;
-  if (typeof this.header.BZERO == "undefined") this.header.BZERO = 0;
+    if (typeof this.header.BSCALE == "undefined") this.header.BSCALE = 1;
+    if (typeof this.header.BZERO == "undefined") this.header.BZERO = 0;
 
-  // Remove any space padding
-  while (iOffset < iLength && oFile.getStringAt(iOffset, 1) == " ") iOffset++;
+    // Remove any space padding
+    while (iOffset < iLength && asText[iOffset] === " ") iOffset++;
 
-  return iOffset;
+    return iOffset;
+  });
 };
 
 // Parse the FITS image from the file
-FITS.prototype.readFITSImage = function (oFile, iOffset) {
-  var iLength = oFile.getLength();
+FITS.prototype.readFITSImage = function (blob, headerOffset) {
+  var iLength = blob.size;
   var i = 0;
   this.z = 0;
   this.image = new Array(this.width * this.height * this.depth);
@@ -106,20 +116,20 @@ FITS.prototype.readFITSImage = function (oFile, iOffset) {
   // Should actually deal with the different cases
   var p = 0;
 
-  if (this.header.BITPIX == 16) {
-    i = iOffset;
+  if (this.header.BITPIX === 16) {
+    i = headerOffset;
     while (i < iLength) {
-      val = oFile.getSShortAt(i, bBigEnd);
+      val = getSShortAt(blob, i, bBigEnd);
       this.image[p++] = val * this.header.BSCALE + this.header.BZERO;
       i += 2;
     }
     return true;
-  } else if (this.header.BITPIX == -32) {
-    i = iOffset;
+  } else if (this.header.BITPIX === -32) {
+    i = headerOffset;
     var x;
     while (i < iLength) {
-      x = val = oFile.getLongAt(i, true); //IEEE float32 is always big-endian
-      if (val != 0)
+      x = val = getLongAt(blob, i, true); //IEEE float32 is always big-endian
+      if (val !== 0)
         val =
           (1.0 + (val & 0x007fffff) / 0x0800000) *
           Math.pow(2, ((val & 0x7f800000) >> 23) - 127);
@@ -148,7 +158,7 @@ FITS.prototype.draw = function (id, type) {
   var el = document.getElementById(id);
   if (el != null) {
     // Look for a <canvas> with the specified ID or fall back on a <div>
-    if (typeof el == "object" && el.tagName != "CANVAS") {
+    if (typeof el == "object" && el.tagName !== "CANVAS") {
       // Looks like the element is a container for our <canvas>
       el.setAttribute("id", this.id + "holder");
       var canvas = document.createElement("canvas");
@@ -192,6 +202,7 @@ FITS.prototype.draw = function (id, type) {
 
   // create a new batch of pixels with the same
   // dimensions as the image:
+  console.log(this.width, this.height);
   imageData = this.ctx.createImageData(this.width, this.height);
 
   var pos = 0;
@@ -401,13 +412,13 @@ FITS.prototype.triggerEvent = function (ev, args) {
 };
 // Colour scales defined by SAOImage
 FITS.prototype.colorImage = function (v, type) {
-  if (type == "blackbody" || type == "heat")
+  if (type === "blackbody" || type === "heat")
     return {
       r: v <= 127.5 ? v * 2 : 255,
       g: v > 63.75 ? (v < 191.25 ? (v - 63.75) * 2 : 255) : 0,
       b: v > 127.5 ? (v - 127.5) * 2 : 0,
     };
-  else if (type == "A")
+  else if (type === "A")
     return {
       r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
       g:
@@ -427,7 +438,7 @@ FITS.prototype.colorImage = function (v, type) {
           ? (191.25 - v) * 4
           : 0,
     };
-  else if (type == "B")
+  else if (type === "B")
     return {
       r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
       g: v <= 127.5 ? 0 : v <= 191.25 ? (v - 127.5) * 4 : 255,
@@ -460,4 +471,31 @@ function trim(s) {
   s = s.replace(/[ ]{2,}/gi, " ");
   s = s.replace(/\n /, "\n");
   return s;
+}
+
+function getShortAt(blob, offset, bigEndian) {
+  var short = bigEndian
+    ? (blob.slice(offset, 1) << 8) + blob.slice(offset + 1, 1)
+    : (blob.slice(offset + 1, 1) << 8) + blob.slice(offset, 1);
+  if (short < 0) short += 65536;
+  return short;
+}
+
+function getSShortAt(blob, offset, bigEndian) {
+  var ushort = this.getShortAt(blob, offset, bigEndian);
+  if (ushort > 32767) return ushort - 65536;
+  else return ushort;
+}
+
+function getLongAt(blob, offset, bigEndian) {
+  var byte1 = blob.slice(offset, 1),
+    byte2 = blob.slice(offset + 1, 1),
+    byte3 = blob.slice(offset + 2, 1),
+    byte4 = blob.slice(offset + 3, 1);
+
+  var long = bigEndian
+    ? (((((byte1 << 8) + byte2) << 8) + byte3) << 8) + byte4
+    : (((((byte4 << 8) + byte3) << 8) + byte2) << 8) + byte1;
+  if (long < 0) long += 4294967296;
+  return long;
 }
