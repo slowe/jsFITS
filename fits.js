@@ -179,82 +179,29 @@ FITS.prototype.update = function (inp) {
   }
   if (this.image == null) return 0;
 
-  var mean = 0;
-  var median = 0;
-  var image = new Array(this.width * this.height);
-  var j = 0;
-  var i = 0;
-  var count = 0;
-  var val;
-  var start = this.width * this.height * this.z;
-  var max = this.image[start];
-  var min = this.image[start];
-  var stop = start + image.length;
+  let image = new Array(this.width * this.height);
+  let j = 0;
+  let i = 0;
+  let val;
+  let start = this.width * this.height * this.z;
+  let max = this.image[start];
+  let min = this.image[start];
+  let stop = start + image.length;
 
   for (i = start; i < stop; i++) {
     val = this.image[i];
-    mean += val;
     if (val > max) max = val;
     if (val < min) min = val;
   }
-  mean /= this.image.length;
-
-  // Calculating the median on the whole image is time consuming.
-  // Instead, we'll extract three patches that are 100th the area
-  var sorted = new Array();
-  // One patch on the top edge (100th of full image)
-  for (j = 0; j < Math.round(this.height * 0.1); j++)
-    for (
-      var i = Math.round(this.width * 0.45);
-      i < Math.round(this.width * 0.55);
-      i++
-    )
-      sorted[count++] = this.image[start + j * this.width + i];
-  // A patch to the lower left of centre (100th of full image)
-  for (
-    j = Math.round(this.height * 0.55);
-    j < Math.round(this.height * 0.65);
-    j++
-  )
-    for (
-      i = Math.round(this.width * 0.35);
-      i < Math.round(this.width * 0.45);
-      i++
-    )
-      sorted[count++] = this.image[start + j * this.width + i];
-  // A patch to the right (100th of full image)
-  for (
-    j = Math.round(this.height * 0.45);
-    j < Math.round(this.height * 0.55);
-    j++
-  )
-    for (
-      i = Math.round(this.width * 0.85);
-      i < Math.round(this.width * 0.95);
-      i++
-    )
-      sorted[count++] = this.image[start + j * this.width + i];
-  sorted.sort(function sortNumber(a, b) {
-    return a - b;
-  });
-  median = sorted[Math.floor(sorted.length / 2)];
 
   // Fudge factors
-  if (this.stretch == "log") {
+  if (["log", "loglog", "sqrtlog"].includes(this.stretch)) {
     upper = Math.log(max);
-    lower = Math.log(sorted[Math.floor(sorted.length / 20)]);
-    if (isNaN(lower)) lower = 1;
-  } else if (this.stretch == "loglog") {
-    upper = Math.log(Math.log(max));
-    lower = Math.log(Math.log(sorted[Math.floor(sorted.length / 20)]));
-    if (isNaN(lower)) lower = 1;
-  } else if (this.stretch == "sqrtlog") {
-    upper = Math.sqrt(Math.log(max));
-    lower = Math.sqrt(Math.log(sorted[Math.floor(sorted.length / 20)]));
+    lower = Math.log(min);
     if (isNaN(lower)) lower = 1;
   } else {
     upper = max - (max - min) * 0.2;
-    lower = sorted[Math.floor(sorted.length / 10)];
+    lower = min;
     if (lower > upper) lower = min;
   }
   range = upper - lower;
@@ -287,7 +234,7 @@ FITS.prototype.update = function (inp) {
 
   var row = 0;
   var col = 0;
-  var i = 0;
+  i = 0;
   for (row = 0; row < this.height; row++) {
     for (col = 0; col < this.width; col++) {
       pos = ((this.height - row) * this.width + col) * 4;
@@ -426,7 +373,7 @@ if (typeof addEvent != "function") {
 
 function trim(s) {
   s = s.replace(/(^\s*)|(\s*$)/gi, "");
-  s = s.replace(/[ ]{2,}/gi, " ");
+  s = s.replace(/''{2,}/gi, " ");
   s = s.replace(/\n /, "\n");
   return s;
 }
@@ -444,29 +391,4 @@ function systemBigEndian() {
 
 function swap16(val) {
   return ((val & 0xff) << 8) | ((val >> 8) & 0xff);
-}
-
-function swapBytes(buf, bitpix) {
-  var bytes = new Uint8Array(buf);
-  var len = bytes.length;
-  var holder;
-
-  if (bitpix === 16) {
-    // 16 bit
-    for (var i = 0; i < len; i += 2) {
-      holder = bytes[i];
-      bytes[i] = bytes[i + 1];
-      bytes[i + 1] = holder;
-    }
-  } else if (bitpix === 32) {
-    // 32 bit
-    for (var i = 0; i < len; i += 4) {
-      holder = bytes[i];
-      bytes[i] = bytes[i + 3];
-      bytes[i + 3] = holder;
-      holder = bytes[i + 1];
-      bytes[i + 1] = bytes[i + 2];
-      bytes[i + 2] = holder;
-    }
-  }
 }
