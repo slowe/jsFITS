@@ -66,12 +66,10 @@ FITS.prototype.readFITSHeader = function (blob) {
       val = trim(str.substring(eq + 1, commentOrLineEnd));
       if (key.length > 0) {
         if (val.indexOf("'") === 0) {
-          // It is a string
           val = val.substring(1, val.length - 2);
         } else {
           if (val.includes(".")) val = parseFloat(val);
-          // Floating point
-          else val = parseInt(val); // Integer
+          else val = parseInt(val);
         }
         header[key] = val;
       }
@@ -103,7 +101,6 @@ FITS.prototype.readFITSHeader = function (blob) {
 // Parse the FITS image from the file
 FITS.prototype.readFITSImage = function (blob, headerOffset) {
   this.z = 0;
-  let bBigEnd = typeof this.header.BYTEORDR === "undefined"; // FITS is defined as big endian
 
   return blob
     .slice(headerOffset)
@@ -112,18 +109,16 @@ FITS.prototype.readFITSImage = function (blob, headerOffset) {
       switch (this.header.BITPIX) {
         case 16:
           this.image = new Uint16Array(buf);
-          if (bBigEnd && !systemBigEndian()) {
+          if (!systemBigEndian()) {
             this.image = this.image.map(swap16);
           }
-          break;
+          return true;
         case -32:
           this.image = new Float32Array(buf);
-          break;
+          return true;
         default:
           return false;
       }
-
-      return true;
     });
 };
 
@@ -146,24 +141,9 @@ FITS.prototype.draw = function (id, type) {
       canvas.setAttribute("height", this.height);
       canvas.setAttribute("id", this.id);
       el.appendChild(canvas);
-      // For excanvas we need to initialise the newly created <canvas>
-      if (/*@cc_on!@*/ false) el = G_vmlCanvasManager.initElement(this.canvas);
     } else {
-      // Define the size of the canvas
-      // Excanvas doesn't seem to attach itself to the existing
-      // <canvas> so we make a new one and replace it.
-      if (/*@cc_on!@*/ false) {
-        var canvas = document.createElement("canvas");
-        canvas.style.display = "block";
-        canvas.setAttribute("width", this.width);
-        canvas.setAttribute("height", this.height);
-        canvas.setAttribute("id", this.id);
-        el.parentNode.replaceChild(canvas, el);
-        if (/*@cc_on!@*/ false) el = G_vmlCanvasManager.initElement(elcanvas);
-      } else {
-        el.setAttribute("width", this.width);
-        el.setAttribute("height", this.height);
-      }
+      el.setAttribute("width", this.width);
+      el.setAttribute("height", this.height);
     }
     this.canvas = document.getElementById(id);
   } else this.canvas = el;
