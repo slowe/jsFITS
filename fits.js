@@ -20,12 +20,20 @@ function FITS(input) {
   this.events = { load: "", click: "", mousemove: "" }; // Let's define some events
   this.data = { load: "", click: "", mousemove: "" }; // Let's define some event data
   this.stretchFunctions = {
-    linear: linear,
-    sqrt: sqrt,
-    cuberoot: cuberoot,
-    log: log,
-    loglog: loglog,
-    sqrtlog: sqrtlog,
+    linear: stretchLinear,
+    sqrt: stretchSqrt,
+    cuberoot: stretchCuberoot,
+    log: stretchLog,
+    loglog: stretchLoglog,
+    sqrtlog: stretchSqrtlog,
+  };
+  // Colour scales defined by SAOImage
+  this.colormaps = {
+    blackbody: colormapHeat,
+    heat: colormapHeat,
+    A: colormapA,
+    B: colormapB,
+    gray: colormapGray,
   };
 }
 
@@ -186,7 +194,7 @@ FITS.prototype.update = function (inp) {
   }
   if (this.image == null) return 0;
 
-  let image = new Array(this.width * this.height);
+  let image = new Uint8ClampedArray(this.width * this.height);
   let frameStart = this.width * this.height * this.z;
   let min = 0;
   let frameEnd = frameStart + image.length;
@@ -213,11 +221,11 @@ FITS.prototype.update = function (inp) {
   for (let row = 0; row < this.height; row++) {
     for (let col = 0; col < this.width; col++) {
       let pos = ((this.height - row) * this.width + col) * 4;
-      let c = this.colorImage(image[i], this.color);
+      let rgb = this.colormaps[this.color](image[i]);
       //if(i < 3) console.log(c,image[i])
-      imageData.data[pos] = c.r;
-      imageData.data[pos + 1] = c.g;
-      imageData.data[pos + 2] = c.b;
+      imageData.data[pos] = rgb.r;
+      imageData.data[pos + 1] = rgb.g;
+      imageData.data[pos + 2] = rgb.b;
       imageData.data[pos + 3] = 0xff; // alpha
       i++;
     }
@@ -255,27 +263,27 @@ FITS.prototype.getCursor = function (e) {
   this.cursor = { x: x, y: y };
 };
 
-function linear(pixelValue, lower, range) {
+function stretchLinear(pixelValue, lower, range) {
   return 255 * ((pixelValue - lower) / range);
 }
 
-function sqrt(pixelValue, lower, range) {
+function stretchSqrt(pixelValue, lower, range) {
   return 255 * Math.sqrt((pixelValue - lower) / range);
 }
 
-function cuberoot(pixelValue, lower, range) {
+function stretchCuberoot(pixelValue, lower, range) {
   return 255 * Math.pow((pixelValue - lower) / range, 0.333);
 }
 
-function log(pixelValue, lower, range) {
+function stretchLog(pixelValue, lower, range) {
   return (255 * (Math.log(pixelValue) - lower)) / range;
 }
 
-function loglog(pixelValue, lower, range) {
+function stretchLoglog(pixelValue, lower, range) {
   return (255 * (Math.log(Math.log(pixelValue)) - lower)) / range;
 }
 
-function sqrtlog(pixelValue, lower, range) {
+function stretchSqrtlog(pixelValue, lower, range) {
   return (255 * (Math.sqrt(Math.log(pixelValue)) - lower)) / range;
 }
 
@@ -313,49 +321,55 @@ FITS.prototype.triggerEvent = function (ev, args) {
     }
   }
 };
-// Colour scales defined by SAOImage
-FITS.prototype.colorImage = function (v, type) {
-  if (type === "blackbody" || type === "heat")
-    return {
-      r: v <= 127.5 ? v * 2 : 255,
-      g: v > 63.75 ? (v < 191.25 ? (v - 63.75) * 2 : 255) : 0,
-      b: v > 127.5 ? (v - 127.5) * 2 : 0,
-    };
-  else if (type === "A")
-    return {
-      r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
-      g:
-        v <= 63.75
-          ? v * 4
-          : v <= 127.5
-          ? (127.5 - v) * 4
-          : v < 191.25
-          ? 0
-          : (v - 191.25) * 4,
-      b:
-        v < 31.875
-          ? 0
-          : v < 127.5
-          ? ((v - 31.875) * 8) / 3
-          : v < 191.25
-          ? (191.25 - v) * 4
-          : 0,
-    };
-  else if (type === "B")
-    return {
-      r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
-      g: v <= 127.5 ? 0 : v <= 191.25 ? (v - 127.5) * 4 : 255,
-      b:
-        v < 63.75
-          ? v * 4
-          : v < 127.5
-          ? (127.5 - v) * 4
-          : v < 191.25
-          ? 0
-          : (v - 191.25) * 4,
-    };
-  else return { r: v, g: v, b: v };
-};
+
+function colormapHeat(v) {
+  return {
+    r: v <= 127.5 ? v * 2 : 255,
+    g: v > 63.75 ? (v < 191.25 ? (v - 63.75) * 2 : 255) : 0,
+    b: v > 127.5 ? (v - 127.5) * 2 : 0,
+  };
+}
+
+function colormapA(v) {
+  return {
+    r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
+    g:
+      v <= 63.75
+        ? v * 4
+        : v <= 127.5
+        ? (127.5 - v) * 4
+        : v < 191.25
+        ? 0
+        : (v - 191.25) * 4,
+    b:
+      v < 31.875
+        ? 0
+        : v < 127.5
+        ? ((v - 31.875) * 8) / 3
+        : v < 191.25
+        ? (191.25 - v) * 4
+        : 0,
+  };
+}
+
+function colormapB(v) {
+  return {
+    r: v <= 63.75 ? 0 : v <= 127.5 ? (v - 63.75) * 4 : 255,
+    g: v <= 127.5 ? 0 : v <= 191.25 ? (v - 127.5) * 4 : 255,
+    b:
+      v < 63.75
+        ? v * 4
+        : v < 127.5
+        ? (127.5 - v) * 4
+        : v < 191.25
+        ? 0
+        : (v - 191.25) * 4,
+  };
+}
+
+function colormapGray(v) {
+  return { r: v, g: v, b: v };
+}
 
 // Helpful functions
 
