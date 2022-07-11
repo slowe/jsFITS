@@ -49,31 +49,29 @@ FITS.prototype.load = function (source, fnCallback) {
 
 // Parse the ASCII header from the FITS file. It should be at the start.
 FITS.prototype.readFITSHeader = function (blob) {
-  var iLength = blob.size;
-  var iOffset = 0;
-  var header = {};
-  var key;
-  var val;
-  var inHeader = 1;
+  let iLength = blob.size;
+  let iOffset = 0;
+  let header = {};
+  let inHeader = true;
+  const headerUnitChars = 80;
 
   return blob.text().then((asText) => {
     while (iOffset < iLength && inHeader) {
-      let str = asText.slice(iOffset, iOffset + 80);
-      iOffset += 80;
-      var eq = str.indexOf("=");
-      let commentOrLineEnd = str.includes("/") ? str.indexOf("/") : str.length;
-      key = trim(str.substring(0, eq));
-      val = trim(str.substring(eq + 1, commentOrLineEnd));
-      if (key.length > 0) {
-        if (val.indexOf("'") === 0) {
-          val = val.substring(1, val.length - 2);
+      let headerUnit = asText.slice(iOffset, iOffset + headerUnitChars);
+      let hdu = headerUnit.split(/[=\/]/);
+      let key = hdu[0];
+      let val = hdu[1];
+      if (key.length > 0 && val) {
+        if (val.trim().startsWith("'")) {
+          val = val.replace(/'/g, "").trim();
         } else {
           if (val.includes(".")) val = parseFloat(val);
           else val = parseInt(val);
         }
-        header[key] = val;
+        header[key.trim()] = val;
       }
-      if (str.indexOf("END") === 0) inHeader = 0;
+      if (headerUnit.startsWith("END")) inHeader = false;
+      iOffset += headerUnitChars;
     }
 
     this.header = header;
@@ -163,7 +161,6 @@ FITS.prototype.draw = function (id, type) {
   // dimensions as the image:
   imageData = this.ctx.createImageData(this.width, this.height);
 
-  var pos = 0;
   this.update(type, 0);
 };
 
@@ -180,15 +177,15 @@ FITS.prototype.update = function (inp) {
   if (this.image == null) return 0;
 
   let image = new Array(this.width * this.height);
+  let val;
+  let frameStart = this.width * this.height * this.z;
+  let max = this.image[frameStart];
+  let min = this.image[frameStart];
+  let frameEnd = frameStart + image.length;
   let j = 0;
   let i = 0;
-  let val;
-  let start = this.width * this.height * this.z;
-  let max = this.image[start];
-  let min = this.image[start];
-  let stop = start + image.length;
 
-  for (i = start; i < stop; i++) {
+  for (i = frameStart; i < frameEnd; i++) {
     val = this.image[i];
     if (val > max) max = val;
     if (val < min) min = val;
@@ -207,22 +204,22 @@ FITS.prototype.update = function (inp) {
   range = upper - lower;
 
   if (this.stretch === "linear")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = 255 * ((this.image[i] - lower) / range);
   if (this.stretch === "sqrt")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = 255 * Math.sqrt((this.image[i] - lower) / range);
   if (this.stretch === "cuberoot")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = 255 * Math.pow((this.image[i] - lower) / range, 0.333);
   if (this.stretch === "log")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = (255 * (Math.log(this.image[i]) - lower)) / range;
   if (this.stretch === "loglog")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = (255 * (Math.log(Math.log(this.image[i])) - lower)) / range;
   if (this.stretch === "sqrtlog")
-    for (j = 0, i = start; i < stop; j++, i++)
+    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
       image[j] = (255 * (Math.sqrt(Math.log(this.image[i])) - lower)) / range;
   for (i = 0; i < image.length; i++) {
     val = image[i];
@@ -232,13 +229,11 @@ FITS.prototype.update = function (inp) {
     else image[i] = val;
   }
 
-  var row = 0;
-  var col = 0;
   i = 0;
-  for (row = 0; row < this.height; row++) {
-    for (col = 0; col < this.width; col++) {
-      pos = ((this.height - row) * this.width + col) * 4;
-      c = this.colorImage(image[i], this.color);
+  for (let row = 0; row < this.height; row++) {
+    for (let col = 0; col < this.width; col++) {
+      let pos = ((this.height - row) * this.width + col) * 4;
+      let c = this.colorImage(image[i], this.color);
       //if(i < 3) console.log(c,image[i])
       imageData.data[pos] = c.r;
       imageData.data[pos + 1] = c.g;
@@ -247,7 +242,6 @@ FITS.prototype.update = function (inp) {
       i++;
     }
   }
-  str = "";
   // put pixel data on canvas
   this.ctx.putImageData(imageData, 0, 0);
 };
@@ -386,7 +380,7 @@ function systemBigEndian() {
   uint8Array[1] = 0xbb; // set second byte
   if (uint16array[0] === 0xbbaa) return false;
   if (uint16array[0] === 0xaabb) return true;
-  else throw new Error("Something crazy just happened");
+  else throw new Error("Neither big or little endian, what!?");
 }
 
 function swap16(val) {
