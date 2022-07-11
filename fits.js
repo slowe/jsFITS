@@ -18,6 +18,14 @@ function FITS(input) {
   this.z = 0;
   this.events = { load: "", click: "", mousemove: "" }; // Let's define some events
   this.data = { load: "", click: "", mousemove: "" }; // Let's define some event data
+  this.stretchFunctions = {
+    linear: linear,
+    sqrt: sqrt,
+    cuberoot: cuberoot,
+    log: log,
+    loglog: loglog,
+    sqrtlog: sqrtlog,
+  };
 }
 
 // Loads the FITS file using an ajax request. To call your own function after
@@ -92,6 +100,7 @@ FITS.prototype.readFITSHeader = function (blob) {
     // Remove any space padding
     while (iOffset < iLength && asText[iOffset] === " ") iOffset++;
 
+    console.log(header);
     return iOffset;
   });
 };
@@ -176,7 +185,7 @@ FITS.prototype.update = function (inp) {
   }
   if (this.image == null) return 0;
 
-  let image = new Array(this.width * this.height);
+  let image = new Uint16Array(this.width * this.height);
   let val;
   let frameStart = this.width * this.height * this.z;
   let max = this.image[frameStart];
@@ -184,6 +193,7 @@ FITS.prototype.update = function (inp) {
   let frameEnd = frameStart + image.length;
   let j = 0;
   let i = 0;
+  let lower, upper;
 
   frame = this.image.slice(frameStart, frameEnd);
 
@@ -203,32 +213,15 @@ FITS.prototype.update = function (inp) {
     lower = min;
     if (lower > upper) lower = min;
   }
-  range = upper - lower;
+  const range = upper - lower;
+  console.log(range, upper, lower, max, min);
 
-  if (this.stretch === "linear")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = 255 * ((this.image[i] - lower) / range);
-  if (this.stretch === "sqrt")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = 255 * Math.sqrt((this.image[i] - lower) / range);
-  if (this.stretch === "cuberoot")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = 255 * Math.pow((this.image[i] - lower) / range, 0.333);
-  if (this.stretch === "log")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = (255 * (Math.log(this.image[i]) - lower)) / range;
-  if (this.stretch === "loglog")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = (255 * (Math.log(Math.log(this.image[i])) - lower)) / range;
-  if (this.stretch === "sqrtlog")
-    for (j = 0, i = frameStart; i < frameEnd; j++, i++)
-      image[j] = (255 * (Math.sqrt(Math.log(this.image[i])) - lower)) / range;
-  for (i = 0; i < image.length; i++) {
-    val = image[i];
-    if (isNaN(val)) image[i] = 0;
-    else if (val < 0) image[i] = 0;
-    else if (val > 255) image[i] = 255;
-    else image[i] = val;
+  for (j = 0, i = frameStart; i < frameEnd; j++, i++) {
+    let val = this.stretchFunctions[this.stretch](frame[i], lower, range);
+    if (isNaN(val)) image[j] = 0;
+    else if (val < 0) image[j] = 0;
+    else if (val > 255) image[j] = 255;
+    else image[j] = val;
   }
 
   i = 0;
@@ -251,7 +244,7 @@ FITS.prototype.update = function (inp) {
 FITS.prototype.getCursor = function (e) {
   var x;
   var y;
-  if (e.pageX != undefined && e.pageY != undefined) {
+  if (e.pageX !== undefined && e.pageY !== undefined) {
     x = e.pageX;
     y = e.pageY;
   } else {
@@ -276,6 +269,30 @@ FITS.prototype.getCursor = function (e) {
   }
   this.cursor = { x: x, y: y };
 };
+
+function linear(pixelValue, lower, range) {
+  return 255 * ((pixelValue - lower) / range);
+}
+
+function sqrt(pixelValue, lower, range) {
+  return 255 * Math.sqrt((pixelValue - lower) / range);
+}
+
+function cuberoot(pixelValue, lower, range) {
+  return 255 * Math.pow((pixelValue - lower) / range, 0.333);
+}
+
+function log(pixelValue, lower, range) {
+  return (255 * (Math.log(pixelValue) - lower)) / range;
+}
+
+function loglog(pixelValue, lower, range) {
+  return (255 * (Math.log(Math.log(pixelValue)) - lower)) / range;
+}
+
+function sqrtlog(pixelValue, lower, range) {
+  return (255 * (Math.sqrt(Math.log(pixelValue)) - lower)) / range;
+}
 
 FITS.prototype.clickListener = function (e) {
   this.getCursor(e);
