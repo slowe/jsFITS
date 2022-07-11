@@ -82,6 +82,9 @@ FITS.prototype.readFITSHeader = function (blob) {
         val = val.trim();
         if (val.startsWith("'")) {
           val = val.replace(/'/g, "").trim();
+          if (val.match(/\d+-\d+-\d+T.+/g)) {
+            val = Date.parse(val);
+          }
         } else if (val.match(/^[TF]$/)) {
           val = val.includes("T");
         } else if (val.includes(".")) {
