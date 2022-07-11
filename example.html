@@ -7,7 +7,7 @@
       var fits = new FITS();
 
       // Define the stretch function to apply e.g. linear, sqrt, cuberoot, log, loglog, sqrtlog
-      fits.stretch = "log";
+      fits.stretch = "linear";
 
       // Bind some events
       fits
@@ -67,10 +67,10 @@
 
     Scaling function:
     <select name="scale" onChange="fits.update(this.value)">
-      <option>linear</option>
+      <option selected="selected">linear</option>
       <option>sqrt</option>
       <option>cuberoot</option>
-      <option selected="selected">log</option>
+      <option>log</option>
       <option>sqrtlog</option>
       <option>loglog</option>
     </select>
