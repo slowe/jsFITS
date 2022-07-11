@@ -116,15 +116,11 @@ FITS.prototype.readFITSHeader = function (blob) {
     // Remove any space padding
     while (iOffset < iLength && asText[iOffset] === " ") iOffset++;
 
-    console.log(header);
     return iOffset;
   });
 };
 
-// Parse the FITS image from the file
 FITS.prototype.readFITSImage = function (blob, headerOffset) {
-  this.z = 0;
-
   return blob
     .slice(headerOffset)
     .arrayBuffer()
@@ -229,7 +225,6 @@ FITS.prototype.update = function (inp) {
     for (let col = 0; col < this.width; col++) {
       let pos = ((this.height - row) * this.width + col) * 4;
       let rgb = this.colormaps[this.color](image[i]);
-      //if(i < 3) console.log(c,image[i])
       this.imageData.data[pos] = rgb.r;
       this.imageData.data[pos + 1] = rgb.g;
       this.imageData.data[pos + 2] = rgb.b;
@@ -237,7 +232,7 @@ FITS.prototype.update = function (inp) {
       i++;
     }
   }
-  // put pixel data on canvas
+
   this.ctx.putImageData(this.imageData, 0, 0);
 };
 
