@@ -184,7 +184,7 @@ FITS.prototype.draw = function (id, type) {
 
   // create a new batch of pixels with the same
   // dimensions as the image:
-  imageData = this.ctx.createImageData(this.width, this.height);
+  this.imageData = this.ctx.createImageData(this.width, this.height);
 
   this.update(type, 0);
 };
@@ -218,10 +218,10 @@ FITS.prototype.update = function (inp) {
 
   for (let j = 0, i = frameStart; i < frameEnd; j++, i++) {
     let val = this.stretchFunctions[this.stretch](frame[i], min, range);
-    if (isNaN(val)) image[j] = 0;
-    else if (val < 0) image[j] = 0;
-    else if (val > 255) image[j] = 255;
-    else image[j] = val;
+    if (isNaN(val)) val = 0;
+    else if (val < 0) val = 0;
+    else if (val > 255) val = 255;
+    image[j] = val;
   }
 
   i = 0;
@@ -230,15 +230,15 @@ FITS.prototype.update = function (inp) {
       let pos = ((this.height - row) * this.width + col) * 4;
       let rgb = this.colormaps[this.color](image[i]);
       //if(i < 3) console.log(c,image[i])
-      imageData.data[pos] = rgb.r;
-      imageData.data[pos + 1] = rgb.g;
-      imageData.data[pos + 2] = rgb.b;
-      imageData.data[pos + 3] = 0xff; // alpha
+      this.imageData.data[pos] = rgb.r;
+      this.imageData.data[pos + 1] = rgb.g;
+      this.imageData.data[pos + 2] = rgb.b;
+      this.imageData.data[pos + 3] = 0xff; // alpha
       i++;
     }
   }
   // put pixel data on canvas
-  this.ctx.putImageData(imageData, 0, 0);
+  this.ctx.putImageData(this.imageData, 0, 0);
 };
 
 FITS.prototype.getCursor = function (e) {
