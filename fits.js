@@ -16,6 +16,7 @@ function FITS(input) {
   this.color = "gray";
   this.depth = 0;
   this.z = 0;
+  this.scaleCutoff = 0.999;
   this.events = { load: "", click: "", mousemove: "" }; // Let's define some events
   this.data = { load: "", click: "", mousemove: "" }; // Let's define some event data
   this.stretchFunctions = {
@@ -185,39 +186,23 @@ FITS.prototype.update = function (inp) {
   }
   if (this.image == null) return 0;
 
-  let image = new Uint16Array(this.width * this.height);
-  let val;
+  let image = new Array(this.width * this.height);
   let frameStart = this.width * this.height * this.z;
-  let max = this.image[frameStart];
-  let min = this.image[frameStart];
+  let min = 0;
   let frameEnd = frameStart + image.length;
-  let j = 0;
   let i = 0;
-  let lower, upper;
 
-  frame = this.image.slice(frameStart, frameEnd);
-
-  for (let i = 0; i < frame.length; i++) {
-    val = frame[i];
-    if (val > max) max = val;
-    if (val < min) min = val;
+  const frame = this.image.slice(frameStart, frameEnd);
+  const sorted = frame.slice().sort();
+  const maxPercentile = Math.ceil(image.length * this.scaleCutoff);
+  const max = sorted[maxPercentile];
+  while (min === 0 && i < image.length) {
+    min = sorted[i++];
   }
+  const range = max - min;
 
-  // Fudge factors
-  if (["log", "loglog", "sqrtlog"].includes(this.stretch)) {
-    upper = Math.log(max);
-    lower = Math.log(min);
-    if (isNaN(lower)) lower = 1;
-  } else {
-    upper = max - (max - min) * 0.2;
-    lower = min;
-    if (lower > upper) lower = min;
-  }
-  const range = upper - lower;
-  console.log(range, upper, lower, max, min);
-
-  for (j = 0, i = frameStart; i < frameEnd; j++, i++) {
-    let val = this.stretchFunctions[this.stretch](frame[i], lower, range);
+  for (let j = 0, i = frameStart; i < frameEnd; j++, i++) {
+    let val = this.stretchFunctions[this.stretch](frame[i], min, range);
     if (isNaN(val)) image[j] = 0;
     else if (val < 0) image[j] = 0;
     else if (val > 255) image[j] = 255;
