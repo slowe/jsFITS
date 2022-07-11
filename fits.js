@@ -80,14 +80,14 @@ FITS.prototype.readFITSHeader = function (blob) {
       let val = hdu[1];
       if (key.length > 0 && val) {
         val = val.trim();
-        if (val.startsWith("'")) {
+        if (isString(val)) {
           val = val.replace(/'/g, "").trim();
-          if (val.match(/\d+-\d+-\d+T.+/g)) {
+          if (isDate(val)) {
             val = Date.parse(val);
           }
-        } else if (val.match(/^[TF]$/)) {
+        } else if (isBoolean(val)) {
           val = val.includes("T");
-        } else if (val.includes(".")) {
+        } else if (isFloat(val)) {
           val = parseFloat(val);
         } else {
           val = parseInt(val);
@@ -98,24 +98,22 @@ FITS.prototype.readFITSHeader = function (blob) {
       iOffset += headerUnitChars;
     }
 
-    this.header = header;
-    if (this.header.NAXIS >= 2) {
-      if (typeof this.header.NAXIS1 == "number")
-        this.width = this.header.NAXIS1;
-      if (typeof this.header.NAXIS2 == "number")
-        this.height = this.header.NAXIS2;
+    if (header.NAXIS >= 2) {
+      if (typeof header.NAXIS1 == "number") this.width = header.NAXIS1;
+      if (typeof header.NAXIS2 == "number") this.height = header.NAXIS2;
     }
 
-    if (this.header.NAXIS > 2 && typeof this.header.NAXIS3 == "number")
-      this.depth = this.header.NAXIS3;
+    if (header.NAXIS > 2 && typeof header.NAXIS3 == "number")
+      this.depth = header.NAXIS3;
     else this.depth = 1;
 
-    if (typeof this.header.BSCALE == "undefined") this.header.BSCALE = 1;
-    if (typeof this.header.BZERO == "undefined") this.header.BZERO = 0;
+    if (typeof header.BSCALE == "undefined") header.BSCALE = 1;
+    if (typeof header.BZERO == "undefined") header.BZERO = 0;
 
     // Remove any space padding
     while (iOffset < iLength && asText[iOffset] === " ") iOffset++;
 
+    this.header = header;
     return iOffset;
   });
 };
@@ -371,6 +369,22 @@ function colormapB(v) {
 
 function colormapGray(v) {
   return { r: v, g: v, b: v };
+}
+
+function isString(val) {
+  return val.startsWith("'");
+}
+
+function isDate(val) {
+  return val.match(/\d+-\d+-\d+T.+/g);
+}
+
+function isBoolean(val) {
+  return val.match(/^[TF]$/);
+}
+
+function isFloat(val) {
+  return val.includes(".");
 }
 
 // Helpful functions
