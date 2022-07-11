@@ -185,8 +185,10 @@ FITS.prototype.update = function (inp) {
   let j = 0;
   let i = 0;
 
-  for (i = frameStart; i < frameEnd; i++) {
-    val = this.image[i];
+  frame = this.image.slice(frameStart, frameEnd);
+
+  for (let i = 0; i < frame.length; i++) {
+    val = frame[i];
     if (val > max) max = val;
     if (val < min) min = val;
   }
