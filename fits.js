@@ -79,11 +79,15 @@ FITS.prototype.readFITSHeader = function (blob) {
       let key = hdu[0];
       let val = hdu[1];
       if (key.length > 0 && val) {
-        if (val.trim().startsWith("'")) {
+        val = val.trim();
+        if (val.startsWith("'")) {
           val = val.replace(/'/g, "").trim();
+        } else if (val.match(/^[TF]$/)) {
+          val = val.includes("T");
+        } else if (val.includes(".")) {
+          val = parseFloat(val);
         } else {
-          if (val.includes(".")) val = parseFloat(val);
-          else val = parseInt(val);
+          val = parseInt(val);
         }
         header[key.trim()] = val;
       }
@@ -381,13 +385,6 @@ if (typeof addEvent != "function") {
     else if (oElement.attachEvent)
       oElement.attachEvent("on" + strEvent, fncHandler);
   }
-}
-
-function trim(s) {
-  s = s.replace(/(^\s*)|(\s*$)/gi, "");
-  s = s.replace(/''{2,}/gi, " ");
-  s = s.replace(/\n /, "\n");
-  return s;
 }
 
 function systemBigEndian() {
